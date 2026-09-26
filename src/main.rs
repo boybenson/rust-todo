@@ -1,43 +1,18 @@
-struct Todo {
-    item: String,
-    is_complete: bool,
-}
+mod handlers;
+mod models;
+mod routes;
 
-fn add_todo(todos: &mut Vec<Todo>, item: &str) {
-    todos.push(Todo {
-        item: String::from(item),
-        is_complete: false,
-    });
-}
+use routes::create_routes;
 
-fn delete_todo(todos: &mut Vec<Todo>, index: usize) {
-    if index >= todos.len() {
-        println!("Index out of bounds");
-        return;
-    }
-    todos.remove(index);
-}
+#[tokio::main]
+async fn main() {
+    let app = create_routes();
 
-fn complete_todo(todos: &mut Vec<Todo>, index: usize) {
-    match todos.get_mut(index) {
-        Some(todo) => {
-            todo.is_complete = true;
-        }
-        None => {
-            println!("Todo not found");
-        }
-    }
-}
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+        .await
+        .unwrap();
 
-fn main() {
-    let mut todos = vec![];
+    println!("Server running on http://127.0.0.1:3000");
 
-    add_todo(&mut todos, "Learn Rust");
-    add_todo(&mut todos, "Build a rust project");
-    add_todo(&mut todos, "Apply for a job in rust");
-    complete_todo(&mut todos, 2);
-    delete_todo(&mut todos, 100);
-    for todo in todos {
-        println!("Todo: {}, Completed: {}", todo.item, todo.is_complete);
-    }
+    axum::serve(listener, app).await.unwrap();
 }
